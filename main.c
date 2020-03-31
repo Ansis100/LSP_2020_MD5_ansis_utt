@@ -1,15 +1,15 @@
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <unistd.h>
 #include <string.h>
-#include <fcntl.h>
-#include <errno.h>
+#include <unistd.h>
 
 #define DEBUG 0
 
 // Ārēji mainīgie getopt izmantošanai
-extern char * optarg;
+extern char *optarg;
 extern int optind;
 
 // Programmas izmantošanas instrukcija
@@ -21,11 +21,11 @@ const int maxMemorySize = MAX_MEMORY_SIZE;
 
 // ### Alokāciju algoritmi
 // ## Best fit (Ansis)
-void * mallocBestFitInit(int * chunks) {
+void *mallocBestFitInit(int *chunks) {
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocBestFit(size_t size) {
+void *mallocBestFit(size_t size) {
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
@@ -36,51 +36,60 @@ void * mallocBestFit(size_t size) {
 typedef struct WorstServiceInfoStruct {
     size_t availableMemory;
     size_t initialAvailableMemory;
-    void * startOfMemory;
-    void * initialStartOfMemory;
+    void *startOfMemory;
+    void *initialStartOfMemory;
 } WorstServiceInfo;
 
 // Masīvs, kur glabāt dienasta informācijas ierakstus
-// Neefektīvs, jo alocējam tikpat vietas dienasta informācijām, cik alocējam baitus rezervācijām
-// Bet nav svarīgi, jo uzdevums ir testēt rezervēšanas efektivitāti nevis ātrdarbību
+// Neefektīvs, jo alocējam tikpat vietas dienasta informācijām, cik alocējam
+// baitus rezervācijām Bet nav svarīgi, jo uzdevums ir testēt rezervēšanas
+// efektivitāti nevis ātrdarbību
 WorstServiceInfo worstFitServiceInfo[MAX_MEMORY_SIZE];
 
 // Masīvs, kuru izmantot kā rezervējamo atmiņu
 unsigned char worstFitBuffer[MAX_MEMORY_SIZE];
 
 // Worst fit algoritma dienasta informācijas sagatavošana
-void mallocWorstFitInit(int * chunks) {
+void mallocWorstFitInit(int *chunks) {
     int chunksIterator = 0;
     int bufferIterator = 0;
     while (chunks[chunksIterator] != -1) {
         // Pierakstam pieejamos atmiņas chunk'us
-        (worstFitServiceInfo[chunksIterator]).availableMemory = chunks[chunksIterator];
-        (worstFitServiceInfo[chunksIterator]).initialAvailableMemory = chunks[chunksIterator];
-        (worstFitServiceInfo[chunksIterator]).startOfMemory = &worstFitBuffer[bufferIterator];
-        (worstFitServiceInfo[chunksIterator]).initialStartOfMemory = &worstFitBuffer[bufferIterator];
+        (worstFitServiceInfo[chunksIterator]).availableMemory =
+            chunks[chunksIterator];
+        (worstFitServiceInfo[chunksIterator]).initialAvailableMemory =
+            chunks[chunksIterator];
+        (worstFitServiceInfo[chunksIterator]).startOfMemory =
+            &worstFitBuffer[bufferIterator];
+        (worstFitServiceInfo[chunksIterator]).initialStartOfMemory =
+            &worstFitBuffer[bufferIterator];
         bufferIterator += chunks[chunksIterator];
         chunksIterator++;
     }
 }
 
 // Worst fit algoritma alocēsanas funkcija
-void * mallocWorstFit(size_t size) {
+void *mallocWorstFit(size_t size) {
     // Meklējam lielāko pieejamo chunk'u
-    WorstServiceInfo * largestMemoryInfo = NULL;
+    WorstServiceInfo *largestMemoryInfo = NULL;
     int largestMemoryInfoIterator = 0;
     while (!(
         // Beidzam ciklēt, ja tikām līdz dienasta informācijas masīva galam
         largestMemoryInfoIterator > maxMemorySize ||
         // Beidzam ciklēt, ja izlasījām visas aktuālās dienasta informācijas
-        (largestMemoryInfoIterator != 0 && (worstFitServiceInfo[largestMemoryInfoIterator]).initialAvailableMemory == 0)
-    )) {
+        (largestMemoryInfoIterator != 0 &&
+         (worstFitServiceInfo[largestMemoryInfoIterator])
+                 .initialAvailableMemory == 0))) {
         if (!largestMemoryInfo) {
             // Ja šis ir pirmais chunk's, pieņemam to kā lielāko
             largestMemoryInfo = &worstFitServiceInfo[largestMemoryInfoIterator];
         } else {
-            if ((worstFitServiceInfo[largestMemoryInfoIterator]).availableMemory > largestMemoryInfo->availableMemory) {
-                // Ja šis ir n-tais chunk's un ir lielāks par iepriekšējo, tad saglabājam to kā lielāko
-                largestMemoryInfo = &worstFitServiceInfo[largestMemoryInfoIterator];
+            if ((worstFitServiceInfo[largestMemoryInfoIterator])
+                    .availableMemory > largestMemoryInfo->availableMemory) {
+                // Ja šis ir n-tais chunk's un ir lielāks par iepriekšējo, tad
+                // saglabājam to kā lielāko
+                largestMemoryInfo =
+                    &worstFitServiceInfo[largestMemoryInfoIterator];
             }
         }
         largestMemoryInfoIterator++;
@@ -97,13 +106,13 @@ void * mallocWorstFit(size_t size) {
     }
 
     // Saglabājam alocēto adresi, ko atdot lietotājam
-    void * allocatedAddress = largestMemoryInfo->startOfMemory;
+    void *allocatedAddress = largestMemoryInfo->startOfMemory;
 
     // Atjauninam dienasta informāciju
     largestMemoryInfo->availableMemory -= size;
     largestMemoryInfo->startOfMemory += size;
 
-    // Atgriežam lietotājam alocēto adresi 
+    // Atgriežam lietotājam alocēto adresi
     return allocatedAddress;
 }
 
@@ -116,14 +125,22 @@ void mallocWorstFitDump() {
         // Meklējam lielāko pieejamo chunk'u
         memoryInfoIterator > maxMemorySize ||
         // Beidzam ciklēt, ja izlasījām visas aktuālās dienasta informācijas
-        (memoryInfoIterator != 0 && (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory == 0)
-    )) {
+        (memoryInfoIterator != 0 &&
+         (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory ==
+             0))) {
         // Katram chunk'a baitam
-        for (int i = 0; i < (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory; i++) {
+        for (int i = 0;
+             i <
+             (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory;
+             i++) {
             // Izprintējam skaitlisku reprezentāciju
-            printf("%d", *((unsigned char *)(worstFitServiceInfo[memoryInfoIterator]).initialStartOfMemory + i));
+            printf("%d",
+                   *((unsigned char *)(worstFitServiceInfo[memoryInfoIterator])
+                         .initialStartOfMemory +
+                     i));
             memoryByteIterator++;
-            if (i + 1 == (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory) {
+            if (i + 1 == (worstFitServiceInfo[memoryInfoIterator])
+                             .initialAvailableMemory) {
                 printf(" # ");
             } else {
                 printf("   ");
@@ -146,15 +163,17 @@ void mallocWorstFitFreeDump() {
         // Beidzam ciklēt, ja tikām līdz dienasta informācijas masīva galam
         memoryInfoIterator > maxMemorySize ||
         // Beidzam ciklēt, ja izlasījām visas aktuālās dienasta informācijas
-        (memoryInfoIterator != 0 && (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory == 0)
-    )) {
+        (memoryInfoIterator != 0 &&
+         (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory ==
+             0))) {
         if ((worstFitServiceInfo[memoryInfoIterator]).availableMemory != 0) {
             printf(
-                "Free memory of %ld bytes at %p. Initially allocated as %ld bytes\n",
+                "Free memory of %ld bytes at %p. Initially allocated as %ld "
+                "bytes\n",
                 (worstFitServiceInfo[memoryInfoIterator]).availableMemory,
                 &(worstFitServiceInfo[memoryInfoIterator]),
-                (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory
-            );
+                (worstFitServiceInfo[memoryInfoIterator])
+                    .initialAvailableMemory);
         }
         memoryInfoIterator++;
     }
@@ -163,18 +182,22 @@ void mallocWorstFitFreeDump() {
 // Worst fit algoritma fragmentācijas aprēķins
 double mallocWorstFitFragmentation() {
     int memoryInfoIterator = 0;
-    // Atrodam cik kopā brīvu baitu un cik daudz baitu ir lielākajā brīvajā chunk'ā
+    // Atrodam cik kopā brīvu baitu un cik daudz baitu ir lielākajā brīvajā
+    // chunk'ā
     double freeBytes = 0;
     double largestChunkFreeBytes = 0;
     while (!(
         // Beidzam ciklēt, ja tikām līdz dienasta informācijas masīva galam
         memoryInfoIterator > maxMemorySize ||
         // Beidzam ciklēt, ja izlasījām visas aktuālās dienasta informācijas
-        (memoryInfoIterator != 0 && (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory == 0)
-    )) {
+        (memoryInfoIterator != 0 &&
+         (worstFitServiceInfo[memoryInfoIterator]).initialAvailableMemory ==
+             0))) {
         freeBytes += (worstFitServiceInfo[memoryInfoIterator]).availableMemory;
-        if ((worstFitServiceInfo[memoryInfoIterator]).availableMemory > largestChunkFreeBytes) {
-            largestChunkFreeBytes = (worstFitServiceInfo[memoryInfoIterator]).availableMemory;
+        if ((worstFitServiceInfo[memoryInfoIterator]).availableMemory >
+            largestChunkFreeBytes) {
+            largestChunkFreeBytes =
+                (worstFitServiceInfo[memoryInfoIterator]).availableMemory;
         }
         memoryInfoIterator++;
     }
@@ -182,39 +205,40 @@ double mallocWorstFitFragmentation() {
     // Aprēķinam fragmentāciju, kas ir 100%, ja brīvu baitu nav
     double fragmentation = 100;
     if (freeBytes != 0) {
-        // Ja ir brīvi baiti, tad aprēķinam attiecīgi brīvajai atmiņai un lielākajam chunk'am 
-        fragmentation = ((freeBytes - largestChunkFreeBytes) / freeBytes) * 100.0;
+        // Ja ir brīvi baiti, tad aprēķinam attiecīgi brīvajai atmiņai un
+        // lielākajam chunk'am
+        fragmentation =
+            ((freeBytes - largestChunkFreeBytes) / freeBytes) * 100.0;
     }
 
     return fragmentation;
 }
 
 // ## First fit (Ģirts)
-void * mallocFirstFitInit(int * chunks) {
+void *mallocFirstFitInit(int *chunks) {
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocFirstFit(size_t size) {
+void *mallocFirstFit(size_t size) {
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
 
 // ## Next fit (Andris)
-void * mallocNextFitInit(int * chunks) {
+void *mallocNextFitInit(int *chunks) {
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocNextFit(size_t size) {
+void *mallocNextFit(size_t size) {
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
 
 // ### Galvenā programmas funkcionalitāte
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // ### Noparsējam programmai padotos parametrus
-    char chunksPath[PATH_MAX]; 
-    char sizesPath[PATH_MAX]; 
+    char chunksPath[PATH_MAX];
+    char sizesPath[PATH_MAX];
     int option;
     while ((option = getopt(argc, argv, "c:s:")) != -1) {
         switch (option) {
@@ -228,7 +252,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Incorrect option provided\n");
                 fprintf(stderr, usageFormat, argv[0]);
                 return EXIT_FAILURE;
-        }   
+        }
     }
 
     // Pārbaudam, ka chunks fails tika padots
@@ -247,7 +271,7 @@ int main(int argc, char *argv[])
 
     // ### Noparsējam testējamos chunks, sizes failus
     // Atveram chunks failu
-    FILE * chunksFile;
+    FILE *chunksFile;
     chunksFile = fopen(chunksPath, "r");
     if (chunksFile == NULL) {
         fprintf(stderr, "Chunks file '%s' couldn\'t be read\n", chunksPath);
@@ -255,14 +279,15 @@ int main(int argc, char *argv[])
         fprintf(stderr, usageFormat, argv[0]);
         return EXIT_FAILURE;
     }
-    
+
     // Noparsējam chunks failu
     int chunks[maxMemorySize];
     int chunkCreationIterator = 0;
     while (!feof(chunksFile)) {
         if (!fscanf(chunksFile, "%d", &chunks[chunkCreationIterator])) {
             fprintf(stderr, "Chunks file is incorrectly formatted\n");
-            fprintf(stderr, "Chunks file should consist of lines of single numbers\n");
+            fprintf(stderr,
+                    "Chunks file should consist of lines of single numbers\n");
             return EXIT_FAILURE;
         }
         chunkCreationIterator++;
@@ -270,7 +295,7 @@ int main(int argc, char *argv[])
     chunks[chunkCreationIterator] = -1;
 
     // Atveram sizes failu
-    FILE * sizesFile;
+    FILE *sizesFile;
     sizesFile = fopen(sizesPath, "r");
     if (sizesFile == NULL) {
         fprintf(stderr, "Sizes file '%s' couldn\'t be read\n", sizesPath);
@@ -285,7 +310,8 @@ int main(int argc, char *argv[])
     while (!feof(sizesFile)) {
         if (!fscanf(sizesFile, "%d", &sizes[sizesCreationIterator])) {
             fprintf(stderr, "Sizes file is incorrectly formatted\n");
-            fprintf(stderr, "Sizes file should consist of lines of single numbers\n");
+            fprintf(stderr,
+                    "Sizes file should consist of lines of single numbers\n");
             return EXIT_FAILURE;
         }
         sizesCreationIterator++;
@@ -327,7 +353,7 @@ int main(int argc, char *argv[])
     sizesTestingIterator = 0;
     while (sizes[sizesTestingIterator] != -1) {
         int size = sizes[sizesTestingIterator];
-        unsigned char * mem = mallocWorstFit(size);
+        unsigned char *mem = mallocWorstFit(size);
         if (DEBUG) {
             if (mem) {
                 for (int i = 0; i < size; i++) {
