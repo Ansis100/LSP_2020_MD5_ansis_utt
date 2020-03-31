@@ -19,10 +19,10 @@ const int maxMemorySize = 1024;
 
 // ### Alokāciju algoritmi
 void *mallocBestFitInit(int *chunks) {
-    int i = 0;
-    while (chunks[i] != -1) {
-        printf("%d\n", chunks[i++]);
-    }
+    // int i = 0;
+    // while (chunks[i] != -1) {
+    //     printf("%d\n", chunks[i++]);
+    // }
 }
 
 void *mallocBestFit(size_t size) {
@@ -140,7 +140,6 @@ int main(int argc, char *argv[]) {
         }
         sizesCreationIterator++;
     }
-    sizes[sizesCreationIterator] = -1;
 
     // ### Inicializējam alokācijas algoritmus
     // Šeit tiek sagatavota nepieciešamā atmiņa algoritmiem
