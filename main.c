@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,9 +21,11 @@ const char usageFormat[] = "Usage: %s [-c chunks-file] [-s sizes-file]\n";
 const int maxMemorySize = MAX_MEMORY_SIZE;
 
 // ### Alokāciju algoritmi
-// ## Best fit (Ansis)
 void *mallocBestFitInit(int *chunks) {
-    // Todo: Replace with actual memory initialisation
+    // int i = 0;
+    // while (chunks[i] != -1) {
+    //     printf("%d\n", chunks[i++]);
+    // }
 }
 
 void *mallocBestFit(size_t size) {
@@ -316,7 +319,6 @@ int main(int argc, char *argv[]) {
         }
         sizesCreationIterator++;
     }
-    sizes[sizesCreationIterator] = -1;
 
     // ### Inicializējam alokācijas algoritmus
     // Šeit tiek sagatavota nepieciešamā atmiņa algoritmiem
