@@ -7,7 +7,7 @@
 #include <errno.h>
 
 // Ārēji mainīgie getopt izmantošanai
-extern char * optarg;
+extern char *optarg;
 extern int optind;
 
 // Programmas izmantošanas instrukcija
@@ -18,41 +18,49 @@ const int maxMemorySize = 1024;
 
 // ### Alokāciju algoritmi
 // ## Best fit (Ansis)
-void * mallocBestFitInit(int * chunks) {
-    // Todo: Replace with actual memory initialisation
+void *mallocBestFitInit(int *chunks)
+{
+    // Changes demo
 }
 
-void * mallocBestFit(size_t size) {
+void *mallocBestFit(size_t size)
+{
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
 
 // ## Worst fit (Krišjānis)
-void * mallocWorstFitInit(int * chunks) {
+void *mallocWorstFitInit(int *chunks)
+{
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocWorstFit(size_t size) {
+void *mallocWorstFit(size_t size)
+{
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
 
 // ## First fit (Ģirts)
-void * mallocFirstFitInit(int * chunks) {
+void *mallocFirstFitInit(int *chunks)
+{
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocFirstFit(size_t size) {
+void *mallocFirstFit(size_t size)
+{
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
 
 // ## Next fit (Andris)
-void * mallocNextFitInit(int * chunks) {
+void *mallocNextFitInit(int *chunks)
+{
     // Todo: Replace with actual memory initialisation
 }
 
-void * mallocNextFit(size_t size) {
+void *mallocNextFit(size_t size)
+{
     // Todo: Replace with actual algorithm
     return malloc(size);
 }
@@ -61,33 +69,37 @@ void * mallocNextFit(size_t size) {
 int main(int argc, char *argv[])
 {
     // ### Noparsējam programmai padotos parametrus
-    char chunksPath[PATH_MAX]; 
-    char sizesPath[PATH_MAX]; 
+    char chunksPath[PATH_MAX];
+    char sizesPath[PATH_MAX];
     int option;
-    while ((option = getopt(argc, argv, "c:s:")) != -1) {
-        switch (option) {
-            case 'c':
-                strcpy(chunksPath, optarg);
-                break;
-            case 's':
-                strcpy(sizesPath, optarg);
-                break;
-            default:
-                fprintf(stderr, "Incorrect option provided\n");
-                fprintf(stderr, usageFormat, argv[0]);
-                return EXIT_FAILURE;
-        }   
+    while ((option = getopt(argc, argv, "c:s:")) != -1)
+    {
+        switch (option)
+        {
+        case 'c':
+            strcpy(chunksPath, optarg);
+            break;
+        case 's':
+            strcpy(sizesPath, optarg);
+            break;
+        default:
+            fprintf(stderr, "Incorrect option provided\n");
+            fprintf(stderr, usageFormat, argv[0]);
+            return EXIT_FAILURE;
+        }
     }
 
     // Pārbaudam, ka chunks fails tika padots
-    if (strcmp(chunksPath, "") == 0) {
+    if (strcmp(chunksPath, "") == 0)
+    {
         fprintf(stderr, "Chunks file not provided\n");
         fprintf(stderr, usageFormat, argv[0]);
         return EXIT_FAILURE;
     }
 
     // Pārbaudam, ka sizes fails tika padots
-    if (strcmp(sizesPath, "") == 0) {
+    if (strcmp(sizesPath, "") == 0)
+    {
         fprintf(stderr, "Sizes file not provided\n");
         fprintf(stderr, usageFormat, argv[0]);
         return EXIT_FAILURE;
@@ -95,20 +107,23 @@ int main(int argc, char *argv[])
 
     // ### Noparsējam testējamos chunks, sizes failus
     // Atveram chunks failu
-    FILE * chunksFile;
+    FILE *chunksFile;
     chunksFile = fopen(chunksPath, "r");
-    if (chunksFile == NULL) {
+    if (chunksFile == NULL)
+    {
         fprintf(stderr, "Chunks file '%s' couldn\'t be read\n", chunksPath);
         fprintf(stderr, "Reason: %s\n", strerror(errno));
         fprintf(stderr, usageFormat, argv[0]);
         return EXIT_FAILURE;
     }
-    
+
     // Noparsējam chunks failu
     int chunks[maxMemorySize];
     int chunkCreationIterator = 0;
-    while (!feof(chunksFile)) {
-        if (!fscanf(chunksFile, "%1d", &chunks[chunkCreationIterator])) {
+    while (!feof(chunksFile))
+    {
+        if (!fscanf(chunksFile, "%1d", &chunks[chunkCreationIterator]))
+        {
             fprintf(stderr, "Chunks file is incorrectly formatted\n");
             fprintf(stderr, "Chunks file should consist of lines of single numbers\n");
             return EXIT_FAILURE;
@@ -118,9 +133,10 @@ int main(int argc, char *argv[])
     chunks[chunkCreationIterator] = -1;
 
     // Atveram sizes failu
-    FILE * sizesFile;
+    FILE *sizesFile;
     sizesFile = fopen(sizesPath, "r");
-    if (sizesFile == NULL) {
+    if (sizesFile == NULL)
+    {
         fprintf(stderr, "Sizes file '%s' couldn\'t be read\n", sizesPath);
         fprintf(stderr, "Reason: %s\n", strerror(errno));
         fprintf(stderr, usageFormat, argv[0]);
@@ -130,8 +146,10 @@ int main(int argc, char *argv[])
     // Noparsējam sizes failu
     int sizes[maxMemorySize];
     int sizesCreationIterator = 0;
-    while (!feof(sizesFile)) {
-        if (!fscanf(sizesFile, "%1d", &sizes[sizesCreationIterator])) {
+    while (!feof(sizesFile))
+    {
+        if (!fscanf(sizesFile, "%1d", &sizes[sizesCreationIterator]))
+        {
             fprintf(stderr, "Sizes file is incorrectly formatted\n");
             fprintf(stderr, "Sizes file should consist of lines of single numbers\n");
             return EXIT_FAILURE;
@@ -164,7 +182,8 @@ int main(int argc, char *argv[])
     printf("Testing best fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizes[sizesTestingIterator] != -1)
+    {
         int size = sizes[sizesTestingIterator];
         mallocBestFit(size);
         sizesTestingIterator++;
@@ -173,7 +192,8 @@ int main(int argc, char *argv[])
     printf("Testing worst fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizes[sizesTestingIterator] != -1)
+    {
         int size = sizes[sizesTestingIterator];
         mallocWorstFit(size);
         sizesTestingIterator++;
@@ -182,7 +202,8 @@ int main(int argc, char *argv[])
     printf("Testing first fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizes[sizesTestingIterator] != -1)
+    {
         int size = sizes[sizesTestingIterator];
         mallocFirstFit(size);
         sizesTestingIterator++;
@@ -191,7 +212,8 @@ int main(int argc, char *argv[])
     printf("Testing next fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizes[sizesTestingIterator] != -1)
+    {
         int size = sizes[sizesTestingIterator];
         mallocNextFit(size);
         sizesTestingIterator++;
