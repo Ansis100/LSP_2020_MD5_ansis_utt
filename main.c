@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <linux/limits.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
@@ -17,7 +18,6 @@ const char usageFormat[] = "Usage: %s [-c chunks-file] [-s sizes-file]\n";
 const int maxMemorySize = 1024;
 
 // ### Alokāciju algoritmi
-// ## Best fit (Ansis)
 void *mallocBestFitInit(int *chunks)
 {
     // Changes demo
