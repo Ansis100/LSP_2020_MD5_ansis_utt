@@ -21,16 +21,45 @@ const char usageFormat[] = "Usage: %s [-c chunks-file] [-s sizes-file]\n";
 const int maxMemorySize = MAX_MEMORY_SIZE;
 
 // ### Alokāciju algoritmi
+// ## Worst fit (Ansis)
+
+// Bloku sākumu norādes. beidzas ar norādi, kur sākas neatbrīvota atmiņa
+void *chunk_start_ptrs[MAX_MEMORY_SIZE];
+// Bloku sākumu norādes pēc sizes ievietošanas
+void *chunk_actual_ptrs[MAX_MEMORY_SIZE];
+
 void *mallocBestFitInit(int *chunks) {
-    // int i = 0;
-    // while (chunks[i] != -1) {
-    //     printf("%d\n", chunks[i++]);
-    // }
+    int i = 0;
+    chunk_start_ptrs[0] = malloc(MAX_MEMORY_SIZE);
+    chunk_actual_ptrs[0] = chunk_start_ptrs[0];
+
+    while (chunks[i] != 0) {
+        printf("%p\n", chunk_actual_ptrs[i]);
+        chunk_start_ptrs[i + 1] = chunk_start_ptrs[i] + chunks[i];
+        chunk_actual_ptrs[i + 1] = chunk_start_ptrs[i + 1];
+        i++;
+    }
 }
 
-void *mallocBestFit(size_t size) {
-    // Todo: Replace with actual algorithm
-    return malloc(size);
+void mallocBestFit(size_t size) {
+    int i = 1, delta = INT_MAX, best_ptr_index = -1;
+    void *tmp_ptr = chunk_start_ptrs[i];
+    // printf("\nsize - %d\n", size);
+    while (tmp_ptr != 0x0) {
+        int space = tmp_ptr - chunk_actual_ptrs[i - 1];
+        // printf("%d ", space);
+        if (size <= space && delta > (space - size)) {
+            delta = space - size;
+            best_ptr_index = i - 1;
+        }
+        tmp_ptr = chunk_start_ptrs[++i];
+    }
+
+    if (best_ptr_index != -1) {
+        chunk_actual_ptrs[best_ptr_index] += size;
+    } else {
+        printf("Couldn't free %d bytes\n", size);
+    }
 }
 
 // ## Worst fit (Krišjānis)
@@ -295,7 +324,7 @@ int main(int argc, char *argv[]) {
         }
         chunkCreationIterator++;
     }
-    chunks[chunkCreationIterator] = -1;
+    // chunks[chunkCreationIterator] = -1;
 
     // Atveram sizes failu
     FILE *sizesFile;
@@ -319,6 +348,7 @@ int main(int argc, char *argv[]) {
         }
         sizesCreationIterator++;
     }
+    // sizes[sizesCreationIterator] = -1;
 
     // ### Inicializējam alokācijas algoritmus
     // Šeit tiek sagatavota nepieciešamā atmiņa algoritmiem
@@ -344,7 +374,7 @@ int main(int argc, char *argv[]) {
     printf("Testing best fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizes[sizesTestingIterator] != 0) {
         int size = sizes[sizesTestingIterator];
         mallocBestFit(size);
         sizesTestingIterator++;
