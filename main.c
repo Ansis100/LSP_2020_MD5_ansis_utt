@@ -76,7 +76,7 @@ void bestFitFragmentation() {
     printf("Neizdevās izdalīt - %dB\n", failed_bytes);
     printf("Lielākais brīvais bloks - %dB\n", largest_free_space_block);
     printf("Brīva vieta - %dB\n", free_space);
-    printf("Fragmentācija - %.2f\%\n", ((double)(free_space - largest_free_space_block) / (double)free_space) * 100);
+    printf("Fragmentācija - %.2f%%\n", ((double)(free_space - largest_free_space_block) / (double)free_space) * 100);
 }
 
 // ## Worst fit (Krišjānis)
