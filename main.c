@@ -58,7 +58,7 @@ void mallocBestFit(size_t size) {
     if (best_ptr_index != -1) {
         chunk_actual_ptrs[best_ptr_index] += size;
     } else {
-        printf("Couldn't free %d bytes\n", size);
+        printf("Couldn't free %ld bytes\n", size);
     }
 }
 
@@ -257,14 +257,107 @@ void *mallocFirstFit(size_t size) {
 }
 
 // ## Next fit (Andris)
-void *mallocNextFitInit(int *chunks) {
-    // Todo: Replace with actual memory initialisation
+void *mallocNextFitInit(int *chunks, int *chunks_metadata, int chunks_size) 
+{
+    // printf("Chunks size: %d\n", chunks_size);
+    for (int i = 0; i < chunks_size; i++) {
+        // printf("Metadata nr: %d, elem: %d\n", i, chunks[i]);
+        chunks_metadata[i] = chunks[i];
+    }
+
+    // The last index of array of metadata of chunks stores the "current
+    // pointer" of the traversing next fit algorithm.
+    // Intilialy starts from 0 (the first element).
+    chunks_metadata[chunks_size] = 0;
 }
 
-void *mallocNextFit(size_t size) {
-    // Todo: Replace with actual algorithm
-    return malloc(size);
+void mallocNextFit(
+    int size, int *chunks_metadata, int chunks_size
+) {
+    // Current index stores the current pointer of next_fit.
+    int current_index = chunks_metadata[chunks_size];
+    // To detect if we have traversed the whole pool of memory (all 
+    // the chunks).
+    int loop_nr = 0;
+
+    while (loop_nr < chunks_size) {
+        // printf("Index: %d\n", current_index);
+        if (chunks_metadata[current_index] > size) {
+            // printf("1. Chunk before: %d\n", chunks_metadata[current_index]);
+            chunks_metadata[current_index] -= size;
+            chunks_metadata[chunks_size] = current_index;
+            // printf("1. Chunk after: %d\n", chunks_metadata[current_index]);
+
+            return;
+        } else if (chunks_metadata[current_index] == size) {
+            // printf("2. Chunk before: %d\n", chunks_metadata[current_index]);
+            chunks_metadata[current_index] -= size;
+            // Traverse the current pointer one index up and save it already in 
+            // the array of metadata.
+            chunks_metadata[chunks_size] += 1;
+            // printf("2. Chunk after: %d\n", chunks_metadata[current_index]);
+
+            return;
+        } else {
+            loop_nr++;
+            current_index += 1;
+
+            // So that the current index does not get bigger than the size
+            // of the chunk array.
+            if (current_index == chunks_size) {
+                current_index = 0;
+            }
+        }
+    }
+
+    // This line is reached if there is no chunk big enough to fit the given
+    // size.
+    printf("Could not allocate memory of size %d\n", size);
+    // Restore the pointer after unsuccessful loop to the current index.
+    chunks_metadata[chunks_size] = current_index;
 }
+
+void mallocNextFitDump(int *chunks, int *chunks_metadata, int chunk_size) 
+{
+    // The difference between the initial chunk block size and chunk block size
+    // after allocating memory.
+    int diff;
+    for (int i = 0; i < chunk_size; i++) {
+        diff = chunks[i] - chunks_metadata[i];
+        printf(
+            "Diff: %d, ch: %d, meta_ch: %d\n", 
+            diff, chunks[i], chunks_metadata[i]
+        );
+    }
+}
+
+double mallocNextFitFragmentation(int *chunks_metadata, int chunk_size) 
+{
+    // Store the sum of free bytes of all the chunks.
+    double free_bytes = 0;
+    // Store the largest chunk of free bytes.
+    double largest_free_chunk = 0;
+    // Store the result of calculation of fragmentation.
+    // Initially, we suppose that fragmentation is 100 percent.
+    double result = 100;
+
+    for (int i = 0; i < chunk_size; i++) {
+        free_bytes += chunks_metadata[i];
+        if (chunks_metadata[i] > largest_free_chunk) {
+            largest_free_chunk = chunks_metadata[i];
+        }
+    }
+
+    // printf("Free bytes total: %f\n", free_bytes);
+    // printf("Largest free chunk: %f\n", largest_free_chunk);
+
+    if (free_bytes != 0) {
+        // Return the calculation of fragmentation.
+        result = ((free_bytes - largest_free_chunk) / free_bytes) * 100.0;
+    }
+    
+    return result;
+} 
 
 // ### Galvenā programmas funkcionalitāte
 int main(int argc, char *argv[]) {
@@ -366,7 +459,16 @@ int main(int argc, char *argv[]) {
 
     printf("Initialising next fit\n");
     fflush(stdout);
-    mallocNextFitInit(chunks);
+    // The array where to store the remainder of free memory and the current
+    // pointer of next fit algorithm.
+    // Additionally, the purpose of this array is to not corrupt data in the
+    // initially made array of chunks.
+    // INFO: Because of the chunkCreationIterator value being "the biggest 
+    // index of chunks array PLUS TWO gives me one additional space to store
+    // the "current pointer" and one addional for some undefined use at
+    // the moment.
+    int chunks_metadata[chunkCreationIterator];
+    mallocNextFitInit(chunks, chunks_metadata, chunkCreationIterator);
 
     // ### Testējam alokācijas algoritmus
     int sizesTestingIterator;
@@ -415,11 +517,22 @@ int main(int argc, char *argv[]) {
     printf("Testing next fit\n");
     fflush(stdout);
     sizesTestingIterator = 0;
-    while (sizes[sizesTestingIterator] != -1) {
+    while (sizesTestingIterator < sizesCreationIterator) {
         int size = sizes[sizesTestingIterator];
-        mallocNextFit(size);
+        // printf("Passing argument of size: %d\n", size);
+        mallocNextFit(size, chunks_metadata, chunkCreationIterator);
         sizesTestingIterator++;
     }
+
+    if (DEBUG) {
+        mallocNextFitDump(chunks, chunks_metadata, chunkCreationIterator);
+    }
+
+    // Calculating the fragmentation of memory using Next Fit.
+    double result = mallocNextFitFragmentation(
+        chunks_metadata, chunkCreationIterator
+    );
+    printf("Next fit fragmentation: %f\n", result);
 
     return EXIT_SUCCESS;
 }
