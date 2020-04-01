@@ -1,5 +1,4 @@
 .vscode
-main
 
 # Prerequisites
 *.d
@@ -32,8 +31,10 @@ main
 *.dylib
 
 # Executables
+md5
 main
 *.exe
+*.bin
 *.out
 *.app
 *.i*86
