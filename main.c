@@ -2,12 +2,17 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/limits.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #define DEBUG 0
+
+// Krāsas, ko izmantot printējot ārā algoritmu informāciju
+#define ANSI_COLOR_GREEN_CODE "\e[32m"
+#define ANSI_COLOR_NORMAL_CODE "\e[0m"
 
 // Ārēji mainīgie getopt izmantošanai
 extern char *optarg;
@@ -476,6 +481,7 @@ int main(int argc, char *argv[]) {
 
     printf("Initialising next fit\n");
     fflush(stdout);
+
     // The array where to store the remainder of free memory and the current
     // pointer of next fit algorithm.
     // Additionally, the purpose of this array is to not corrupt data in the
@@ -487,22 +493,36 @@ int main(int argc, char *argv[]) {
     int chunks_metadata[chunkCreationIterator];
     mallocNextFitInit(chunks, chunks_metadata, chunkCreationIterator);
 
+    printf("\n");
+
     // ### Testējam alokācijas algoritmus
+    clock_t start, end;
+    long diff;
     int sizesTestingIterator;
 
+    printf("%s", ANSI_COLOR_GREEN_CODE);
     printf("Testing best fit\n");
+    printf("%s", ANSI_COLOR_NORMAL_CODE);
     fflush(stdout);
     sizesTestingIterator = 0;
+    start = clock();
     while (sizes[sizesTestingIterator] != 0) {
         int size = sizes[sizesTestingIterator];
         mallocBestFit(size);
         sizesTestingIterator++;
     }
+    end = clock();
+    diff = end - start;
     bestFitFragmentation();
+    printf("Best fit time: %ld CPU clock ticks\n", diff);
+    printf("\n");
 
+    printf("%s", ANSI_COLOR_GREEN_CODE);
     printf("Testing worst fit\n");
+    printf("%s", ANSI_COLOR_NORMAL_CODE);
     fflush(stdout);
     sizesTestingIterator = 0;
+    start = clock();
     while (sizes[sizesTestingIterator] != -1) {
         int size = sizes[sizesTestingIterator];
         unsigned char *mem = mallocWorstFit(size);
@@ -515,33 +535,47 @@ int main(int argc, char *argv[]) {
         }
         sizesTestingIterator++;
     }
-
+    end = clock();
+    diff = end - start;
     if (DEBUG) {
         mallocWorstFitDump();
         mallocWorstFitFreeDump();
     }
+    printf("Worst fit fragmentation: %.2f%%\n", mallocWorstFitFragmentation());
+    printf("Worst fit time: %ld CPU clock ticks\n", diff);
+    printf("\n");
 
-    printf("Worst fit fragmentation: %f\n", mallocWorstFitFragmentation());
-
+    printf("%s", ANSI_COLOR_GREEN_CODE);
     printf("Testing first fit\n");
+    printf("%s", ANSI_COLOR_NORMAL_CODE);
     fflush(stdout);
     sizesTestingIterator = 0;
+    start = clock();
     while (sizes[sizesTestingIterator] != -1) {
         int size = sizes[sizesTestingIterator];
         mallocFirstFit(size);
         sizesTestingIterator++;
     }
+    end = clock();
+    diff = end - start;
+    printf("First fit time: %ld CPU clock ticks\n", diff);
+    printf("\n");
 
+
+    printf("%s", ANSI_COLOR_GREEN_CODE);
     printf("Testing next fit\n");
+    printf("%s", ANSI_COLOR_NORMAL_CODE);
     fflush(stdout);
     sizesTestingIterator = 0;
+    start = clock();
     while (sizesTestingIterator < sizesCreationIterator) {
         int size = sizes[sizesTestingIterator];
         // printf("Passing argument of size: %d\n", size);
         mallocNextFit(size, chunks_metadata, chunkCreationIterator);
         sizesTestingIterator++;
     }
-
+    end = clock();
+    diff = (float)end - start;
     if (DEBUG) {
         mallocNextFitDump(chunks, chunks_metadata, chunkCreationIterator);
     }
@@ -550,7 +584,9 @@ int main(int argc, char *argv[]) {
     double result = mallocNextFitFragmentation(
         chunks_metadata, chunkCreationIterator
     );
-    printf("Next fit fragmentation: %f\n", result);
+    printf("Next fit fragmentation: %.2f%%\n", result);
+    printf("Next fit time: %ld CPU clock ticks\n", diff);
+    printf("\n");
 
     return EXIT_SUCCESS;
 }
