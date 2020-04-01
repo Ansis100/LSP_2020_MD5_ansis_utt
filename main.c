@@ -46,18 +46,18 @@ void mallocBestFit(size_t size) {
     int i = 1, delta = INT_MAX, best_ptr_index = -1;
     void *tmp_ptr = chunk_start_ptrs[i];
     while (tmp_ptr != 0x0) {
-        int space = tmp_ptr - chunk_actual_ptrs[i - 1];
-        if (size <= space && delta > (space - size)) {
-            delta = space - size;
-            best_ptr_index = i - 1;
+        int space = tmp_ptr - chunk_actual_ptrs[i - 1]; 
+        if (size <= space && delta > (space - size)) { 
+            delta = space - size; 
+            best_ptr_index = i - 1; 
         }
         tmp_ptr = chunk_start_ptrs[++i];
     }
 
     if (best_ptr_index != -1) {
-        chunk_actual_ptrs[best_ptr_index] += size;
+        chunk_actual_ptrs[best_ptr_index] += size; 
     } else {
-        failed_bytes += size;
+        failed_bytes += size; 
     }
 }
 
@@ -265,14 +265,53 @@ double mallocWorstFitFragmentation() {
 
 // ## First fit (Ģirts)
 void *mallocFirstFitInit(int *chunks) {
+       int i = 0;
+    chunk_start_ptrs[0] = malloc(MAX_MEMORY_SIZE);
+    chunk_actual_ptrs[0] = chunk_start_ptrs[0];
+
+    while (chunks[i] != 0) {
+        chunk_start_ptrs[i + 1] = chunk_start_ptrs[i] + chunks[i];
+        chunk_actual_ptrs[i + 1] = chunk_start_ptrs[i + 1];
+        i++;
+    }
     // Todo: Replace with actual memory initialisation
 }
 
 void *mallocFirstFit(size_t size) {
-    // Todo: Replace with actual algorithm
-    return malloc(size);
+
+    int i = 1, first_ptr_index = -1;
+    void *tmp_ptr = chunk_start_ptrs[i];
+    while (tmp_ptr != 0x0) {
+        int space = tmp_ptr - chunk_actual_ptrs[i - 1]; 
+        if (size <= space) {
+            first_ptr_index = i - 1;
+        }
+        tmp_ptr = chunk_start_ptrs[++i]; 
+    }
+
+    if (first_ptr_index != -1) { 
+        chunk_actual_ptrs[first_ptr_index] += size; 
+    } else {
+        failed_bytes += size; 
+    }
+
+    return first_ptr_index;
 }
 
+void FirstFitFragmentation() {
+    int i = 1, largest_free_space_block = INT_MIN, free_space = 0;
+    void *tmp_ptr = chunk_start_ptrs[i];
+    while (tmp_ptr != 0x0) {
+        int space = tmp_ptr - chunk_actual_ptrs[i - 1];
+        free_space += space;
+        if (largest_free_space_block < space) {
+            largest_free_space_block = space;
+        }
+        tmp_ptr = chunk_start_ptrs[++i];
+    }
+    printf("First fit fragmentation %.2f\%\n", ((double)(free_space - largest_free_space_block) / (double)free_space) * 100);
+
+}
 // ## Next fit (Andris)
 void *mallocNextFitInit(int *chunks, int *chunks_metadata, int chunks_size) 
 {
@@ -431,7 +470,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr,
                     "Chunks file should consist of lines of single numbers\n");
             return EXIT_FAILURE;
-        }
+        } 
         chunkCreationIterator++;
     }
     // chunks[chunkCreationIterator] = -1;
@@ -531,6 +570,7 @@ int main(int argc, char *argv[]) {
         mallocFirstFit(size);
         sizesTestingIterator++;
     }
+    FirstFitFragmentation();
 
     printf("Testing next fit\n");
     fflush(stdout);
