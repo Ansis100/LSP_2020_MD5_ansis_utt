@@ -27,6 +27,8 @@ const int maxMemorySize = MAX_MEMORY_SIZE;
 void *chunk_start_ptrs[MAX_MEMORY_SIZE];
 // Bloku sākumu norādes pēc sizes ievietošanas
 void *chunk_actual_ptrs[MAX_MEMORY_SIZE];
+// Neizdalītais baitu daudzums
+int failed_bytes = 0;
 
 void *mallocBestFitInit(int *chunks) {
     int i = 0;
@@ -34,7 +36,6 @@ void *mallocBestFitInit(int *chunks) {
     chunk_actual_ptrs[0] = chunk_start_ptrs[0];
 
     while (chunks[i] != 0) {
-        printf("%p\n", chunk_actual_ptrs[i]);
         chunk_start_ptrs[i + 1] = chunk_start_ptrs[i] + chunks[i];
         chunk_actual_ptrs[i + 1] = chunk_start_ptrs[i + 1];
         i++;
@@ -44,10 +45,8 @@ void *mallocBestFitInit(int *chunks) {
 void mallocBestFit(size_t size) {
     int i = 1, delta = INT_MAX, best_ptr_index = -1;
     void *tmp_ptr = chunk_start_ptrs[i];
-    // printf("\nsize - %d\n", size);
     while (tmp_ptr != 0x0) {
         int space = tmp_ptr - chunk_actual_ptrs[i - 1];
-        // printf("%d ", space);
         if (size <= space && delta > (space - size)) {
             delta = space - size;
             best_ptr_index = i - 1;
@@ -58,8 +57,26 @@ void mallocBestFit(size_t size) {
     if (best_ptr_index != -1) {
         chunk_actual_ptrs[best_ptr_index] += size;
     } else {
-        printf("Couldn't free %d bytes\n", size);
+        failed_bytes += size;
     }
+}
+
+void bestFitFragmentation() {
+    int i = 1, largest_free_space_block = INT_MIN, free_space = 0;
+    void *tmp_ptr = chunk_start_ptrs[i];
+    while (tmp_ptr != 0x0) {
+        int space = tmp_ptr - chunk_actual_ptrs[i - 1];
+        free_space += space;
+        if (largest_free_space_block < space) {
+            largest_free_space_block = space;
+        }
+        tmp_ptr = chunk_start_ptrs[++i];
+    }
+
+    printf("Neizdevās izdalīt - %dB\n", failed_bytes);
+    printf("Lielākais brīvais bloks - %dB\n", largest_free_space_block);
+    printf("Brīva vieta - %dB\n", free_space);
+    printf("Fragmentācija - %.2f\%\n", ((double)(free_space - largest_free_space_block) / (double)free_space) * 100);
 }
 
 // ## Worst fit (Krišjānis)
@@ -379,6 +396,7 @@ int main(int argc, char *argv[]) {
         mallocBestFit(size);
         sizesTestingIterator++;
     }
+    bestFitFragmentation();
 
     printf("Testing worst fit\n");
     fflush(stdout);
