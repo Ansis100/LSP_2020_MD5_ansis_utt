@@ -35,6 +35,7 @@ void *chunk_actual_ptrs[MAX_MEMORY_SIZE];
 // Neizdalītais baitu daudzums
 int failed_bytes = 0;
 
+// Cikliski savada norāžu masīvā visas bloku robežu norādes
 void *mallocBestFitInit(int *chunks) {
     int i = 0;
     chunk_start_ptrs[0] = malloc(MAX_MEMORY_SIZE);
@@ -50,6 +51,8 @@ void *mallocBestFitInit(int *chunks) {
 void mallocBestFit(size_t size) {
     int i = 1, delta = INT_MAX, best_ptr_index = -1;
     void *tmp_ptr = chunk_start_ptrs[i];
+    
+    // Atrod to bloku, kura atšķirība ir vismazākā no size
     while (tmp_ptr != 0x0) {
         int space = tmp_ptr - chunk_actual_ptrs[i - 1]; 
         if (size <= space && delta > (space - size)) { 
@@ -59,6 +62,7 @@ void mallocBestFit(size_t size) {
         tmp_ptr = chunk_start_ptrs[++i];
     }
 
+    // Ja tika atrasts bloks, pārvieto bloka robežu norādes, lai attēlotu bloku aizpildīšanos
     if (best_ptr_index != -1) {
         chunk_actual_ptrs[best_ptr_index] += size; 
     } else {
@@ -66,9 +70,12 @@ void mallocBestFit(size_t size) {
     }
 }
 
+// Aprēķina best fit fragmentāciju
 void bestFitFragmentation() {
     int i = 1, largest_free_space_block = INT_MIN, free_space = 0;
     void *tmp_ptr = chunk_start_ptrs[i];
+    
+    // Atrod kopējo brīvo vietu un vislielāko brīvo bloku
     while (tmp_ptr != 0x0) {
         int space = tmp_ptr - chunk_actual_ptrs[i - 1];
         free_space += space;
